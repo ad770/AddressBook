@@ -164,36 +164,37 @@ int getDataFromAddressBookFile(vector<Contact> &contactList, int userId) {
 int logging (vector<User> &users, int usersAmount) {
     int id=0;
     string login, password;
-        cout << "Podaj nazwe: ";
-        cin >> login;
+    cout << "Podaj nazwe: ";
+    cin >> login;
 
-        auto iter = find_if(users.begin(), users.end(),
-        [&](User const & users) {
-            return users.login == login;
-        });
-        if (iter==users.end()) {
-            cout << "Nie ma takiego kontaktu w bazie!" << endl;
-            Sleep(1000);
-            return id;
-        } else {
-            for (int chances=0; chances<3; chances++) {
-                cout << "Podaj haslo. Pozostalo prob " << 3-chances << ": ";
-                cin >> password;
-                if (iter->password==password) {
-                    cout << "Zalogowales sie poprawnie!" << endl;
-                    Sleep(1000);
-                    return iter->userId;
-                }
+    auto iter=find_if(users.begin(), users.end(),
+    [&](User const & users) {
+        return users.login==login;
+    });
+
+    if (iter==users.end()) {
+        cout << "Nie ma takiego kontaktu w bazie!" << endl;
+        Sleep(1000);
+        return id;
+    } else {
+        for (int chances=0; chances<3; chances++) {
+            cout << "Podaj haslo. Pozostalo prob " << 3-chances << ": ";
+            cin >> password;
+            if (iter->password==password) {
+                cout << "Zalogowales sie poprawnie!" << endl;
+                Sleep(1000);
+                return iter->userId;
             }
-            cout << "Podales 3 razy bledne haslo. Za chwile wrocisz do Menu logowania";
-            Sleep (700);
-            cout << ".";
-            Sleep (700);
-            cout << ".";
-            Sleep (700);
-            cout << ".";
-            return id;
         }
+        cout << "Podales 3 razy bledne haslo. Za chwile wrocisz do Menu logowania";
+        Sleep (700);
+        cout << ".";
+        Sleep (700);
+        cout << ".";
+        Sleep (700);
+        cout << ".";
+        return id;
+    }
 }
 
 int registration (vector<User> &users, int usersAmount) {
@@ -242,8 +243,32 @@ int registration (vector<User> &users, int usersAmount) {
     } while (newUserId==0);
 }
 
-int changeUserPassword (vector<User> &users, int usersAmount, int userId) {
+void changeUserPassword (vector<User> &users, int userId) {
+    string oldPassword, newPassword;
 
+    cout << "Podaj stare haslo: ";
+    cin >> oldPassword;
+
+    if (users[userId-1].password==oldPassword) {
+        cout << "Podaj nowe haslo: ";
+        cin >> newPassword;
+        users[userId-1].password=newPassword;
+
+    fstream inputFile;
+    inputFile.open("Uzytkownicy.txt",ios::out);
+    if (inputFile.good()==true) {
+        for (auto it: users) {
+            inputFile << it.userId << "|" << it.login << "|" << it.password << "|" << endl;
+        }
+    }
+    inputFile.close();
+    cout << "Haslo zostalo pomyslnie zmienione" << endl;
+    Sleep(1000);
+    return;
+    }
+    else {
+        cout << "Podano nieprawidlowe haslo.";
+    }
 }
 
 int addNewContact(vector<Contact> &contactList, int wholeContactsAmount, int userId) {
@@ -536,7 +561,7 @@ int main() {
                         editContact(contactList);
                         break;
                     case '7':
-                        //changeUserPassword(users, userId);
+                        changeUserPassword(users, userId);
                         break;
                     case '8':
                         flag=false;
