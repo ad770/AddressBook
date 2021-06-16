@@ -52,7 +52,7 @@ void getLoginFileInfo() {
     inputFile.open("Uzytkownicy.txt",ios::in);
     if(inputFile.good()==false) {
         cout << "Ups! Niezbedny plik nie istnieje!" << endl;
-        Sleep(1000);
+        Sleep(500);
         cout <<"Ale nie przejmuj sie! Pracuje wlasnie nad jego utworzeniem..." << endl << endl;
         Sleep(1000);
         ofstream inputFile("Uzytkownicy.txt");
@@ -69,7 +69,7 @@ void getAddressBookFileInfo() {
     inputFile.open("Adresaci.txt",ios::in);
     if(inputFile.good()==false) {
         cout << "Ups! Niezbedny plik nie istnieje!" << endl;
-        Sleep(1000);
+        Sleep(500);
         cout <<"Ale nie przejmuj sie! Pracuje wlasnie nad jego utworzeniem..." << endl << endl;
         Sleep(1000);
         ofstream inputFile("Adresaci.txt");
@@ -114,7 +114,7 @@ int getDataFromLoginFile(vector<User> &users) {
     return usersAmount;
 }
 
-int getDataFromAddressBookFile(vector<Contact> &contactList, int userId) {
+int getDataFromAddressBookFileForLoggedInUser(vector<Contact> &loggedInUserContactList, int userId) {
     Contact person;
     string line;
     int lineNumber=1;
@@ -151,7 +151,7 @@ int getDataFromAddressBookFile(vector<Contact> &contactList, int userId) {
                 contactsAmount++;
                 lineNumber=0;
                 if (person.userId == userId) {
-                    contactList.push_back(person);
+                    loggedInUserContactList.push_back(person);
                 }
             }
             lineNumber++;
@@ -159,6 +159,55 @@ int getDataFromAddressBookFile(vector<Contact> &contactList, int userId) {
     }
     inputFile.close();
     return contactsAmount;
+}
+
+void getWholeDataFromAddressBookFile(vector<Contact> &wholeContactList) {
+    Contact tempContactList;
+    string line;
+    int lineNumber=1;
+    int contactsAmount=0;
+
+    fstream inputFile;
+    inputFile.open("Adresaci.txt",ios::in);
+    if(inputFile.good()==true) {
+        while(getline(inputFile,line,'|')) {
+            switch(lineNumber) {
+            case 1:
+                tempContactList.contactId=(atoi(line.c_str()));
+                break;
+            case 2:
+                tempContactList.userId=(atoi(line.c_str()));
+                break;
+            case 3:
+                tempContactList.firstName=(line);
+                break;
+            case 4:
+                tempContactList.lastName=(line);
+                break;
+            case 5:
+                tempContactList.phoneNumber=(line);
+                break;
+            case 6:
+                tempContactList.email=(line);
+                break;
+            case 7:
+                tempContactList.adress=(line);
+                break;
+            }
+            if (lineNumber==7) {
+                contactsAmount++;
+                lineNumber=0;
+                wholeContactList.push_back(tempContactList);
+            }
+            lineNumber++;
+        }
+    }
+    inputFile.close();
+}
+
+void fixFiles () {
+    remove ("Adresaci.txt");
+    rename("Adresaci_temp.txt","Adresaci.txt");
 }
 
 int logging (vector<User> &users, int usersAmount) {
@@ -271,7 +320,7 @@ void changeUserPassword (vector<User> &users, int userId) {
     }
 }
 
-int addNewContact(vector<Contact> &contactList, int wholeContactsAmount, int userId) {
+int addNewContact(vector<Contact> &loggedInUserContactList, int wholeContactsAmount, int userId) {
     system("cls");
     getAddressBookFileInfo();
     system("cls");
@@ -299,20 +348,19 @@ int addNewContact(vector<Contact> &contactList, int wholeContactsAmount, int use
     person.phoneNumber=(phoneNumber);
     person.email=(email);
     person.adress=(adress);
+    loggedInUserContactList.push_back(person);
 
-    contactList.push_back(person);
+    fstream outputFile;
+    outputFile.open("Adresaci.txt",ios::out | ios::app);
 
-    fstream inputFile;
-    inputFile.open("Adresaci.txt",ios::out | ios::app);
-
-    if (inputFile.good()==true) {
-        inputFile << contactList[contactList.size()-1].contactId << '|';
-        inputFile << contactList[contactList.size()-1].userId << '|';
-        inputFile << contactList[contactList.size()-1].firstName << '|';
-        inputFile << contactList[contactList.size()-1].lastName << '|';
-        inputFile << contactList[contactList.size()-1].phoneNumber << '|';
-        inputFile << contactList[contactList.size()-1].email << '|';
-        inputFile << contactList[contactList.size()-1].adress << '|' << endl;
+    if (outputFile.good()==true) {
+        outputFile << loggedInUserContactList[loggedInUserContactList.size()-1].contactId << '|';
+        outputFile << loggedInUserContactList[loggedInUserContactList.size()-1].userId << '|';
+        outputFile << loggedInUserContactList[loggedInUserContactList.size()-1].firstName << '|';
+        outputFile << loggedInUserContactList[loggedInUserContactList.size()-1].lastName << '|';
+        outputFile << loggedInUserContactList[loggedInUserContactList.size()-1].phoneNumber << '|';
+        outputFile << loggedInUserContactList[loggedInUserContactList.size()-1].email << '|';
+        outputFile << loggedInUserContactList[loggedInUserContactList.size()-1].adress << '|' << endl;
 
         cout << "Poprawnie dodano nowy kontakt.";
         Sleep(1000);
@@ -321,15 +369,14 @@ int addNewContact(vector<Contact> &contactList, int wholeContactsAmount, int use
         getchar();
         getchar();
     }
-    inputFile.close();
+    outputFile.close();
     return wholeContactsAmount+1;
 }
 
-void showContacts (vector<Contact> &contactList) {
+void showContacts (vector<Contact> &loggedInUserContactList) {
     system("cls");
 
-    //find_if userId==id
-    for (auto& iter: contactList) {
+    for (auto& iter: loggedInUserContactList) {
         cout << "Id: \t\t\t"                << iter.contactId << endl;
         cout << "Imie: \t\t\t"              << iter.firstName << endl;
         cout << "Nazwisko: \t\t"            << iter.lastName << endl;
@@ -342,7 +389,7 @@ void showContacts (vector<Contact> &contactList) {
     getchar();
 }
 
-void searchByFirstName (vector<Contact> &contactList) {
+void searchByFirstName (vector<Contact> &loggedInUserContactList) {
     string firstName;
     int itemsFound=0;
 
@@ -350,7 +397,7 @@ void searchByFirstName (vector<Contact> &contactList) {
     cout << "Podaj imie, ktorego szukasz: ";
     firstName = getStringLine();
 
-    for (auto& iter: contactList) {
+    for (auto& iter: loggedInUserContactList) {
         if (iter.firstName==firstName) {
             cout << "Id: \t\t\t"                << iter.contactId << endl;
             cout << "Imie: \t\t\t"              << iter.firstName << endl;
@@ -368,7 +415,7 @@ void searchByFirstName (vector<Contact> &contactList) {
     getchar();
 }
 
-void searchByLastName (vector<Contact> &contactList) {
+void searchByLastName (vector<Contact> &loggedInUserContactList) {
     string lastName;
     int itemsFound=0;
 
@@ -376,7 +423,7 @@ void searchByLastName (vector<Contact> &contactList) {
     cout << "Podaj nazwisko, ktorego szukasz: ";
     lastName = getStringLine();
 
-    for (auto& iter: contactList) {
+    for (auto& iter: loggedInUserContactList) {
         if (iter.lastName==lastName) {
             cout << "Id: \t\t\t"                << iter.contactId << endl;
             cout << "Imie: \t\t\t"              << iter.firstName << endl;
@@ -394,17 +441,18 @@ void searchByLastName (vector<Contact> &contactList) {
     getchar();
 }
 
-int removeContact (vector<Contact> &contactList, int contactsAmount) {
+int removeContact (vector<Contact> &loggedInUserContactList, int contactsAmount) {
+    vector <Contact> wholeContactList;
     int id;
     cout << "Podaj numer indeksu do usuniecia: ";
     cin >> id;
 
-    auto iter = find_if(contactList.begin(), contactList.end(),
-    [&](Contact const & contactList) {
-        return contactList.contactId == id;
+    auto iter = find_if(loggedInUserContactList.begin(), loggedInUserContactList.end(),
+    [&](Contact const & loggedInUserContactList) {
+        return loggedInUserContactList.contactId == id;
     });
 
-    if (iter == contactList.end()) {
+    if (iter == loggedInUserContactList.end()) {
         cout << "Nie ma takiego kontaktu w bazie!" << endl;
         cout << "Aby kontynuowac, nacisnij dowolny klawisz.";
         getchar();
@@ -415,29 +463,39 @@ int removeContact (vector<Contact> &contactList, int contactsAmount) {
     cout << "Aby potwierdzic usuniecie kontaktu o indeksie = " << id << ", nacisnij t" << endl;
     cin.sync();
     if (getch()=='t') {
-        contactList.erase(
-            remove_if(contactList.begin(), contactList.end(),
-                [&](Contact const & contactList) {
-            return contactList.contactId == id;
+        loggedInUserContactList.erase(
+            remove_if(loggedInUserContactList.begin(), loggedInUserContactList.end(),
+        [&](Contact const & loggedInUserContactList) {
+            return loggedInUserContactList.contactId == id;
         }),
-        contactList.end());
+        loggedInUserContactList.end());
         cout << "Kontakt zostal pomyslnie usuniety" << endl;
         Sleep(1000);
 
         fstream inputFile;
-        inputFile.open("Adresaci.txt",ios::out);
-
-        if (inputFile.good()==true) {
-            for (auto it: contactList) {
-                inputFile << it.contactId << "|" << it.userId << "|" << it.firstName << "|" << it.lastName << "|" << it.phoneNumber << "|" << it.email << "|" << it.adress << "|" << endl;
-            }
+        inputFile.open("Adresaci.txt",ios::in);
+        if(inputFile.good()==true) {
+            getWholeDataFromAddressBookFile(wholeContactList);
         }
         inputFile.close();
+
+        ofstream outputFile;
+        outputFile.open("Adresaci_temp.txt",ios::out);
+
+        if (outputFile.good()==true) {
+            for (auto it: wholeContactList) {
+                if (it.contactId!=id) {
+                    outputFile << it.contactId << "|" << it.userId << "|" << it.firstName << "|" << it.lastName << "|" << it.phoneNumber << "|" << it.email << "|" << it.adress << "|" << endl;
+                }
+            }
+        }
+        outputFile.close();
+        fixFiles();
     } else system("pause");
     return contactsAmount-1;
 }
 
-void editContact (vector<Contact> &contactList) {
+void editContact (vector<Contact> &loggedInUserContactList) {
     int id;
     string newFirstName, newLastName, newPhoneNumber, newEmail, newAdress;
     Contact person;
@@ -445,12 +503,12 @@ void editContact (vector<Contact> &contactList) {
     cout << "Podaj numer indesku osoby, ktorej dane chcesz edytowac: ";
     cin >> id;
 
-    auto iter = find_if(contactList.begin(), contactList.end(),
-    [&](Contact const & contactList) {
-        return contactList.contactId == id;
+    auto iter = find_if(loggedInUserContactList.begin(), loggedInUserContactList.end(),
+    [&](Contact const & loggedInUserContactList) {
+        return loggedInUserContactList.contactId == id;
     });
 
-    if (iter == contactList.end()) {
+    if (iter == loggedInUserContactList.end()) {
         cout << "Nie ma takiego kontaktu w bazie!" << endl;
         cout << "Aby kontynuowac, nacisnij dowolny klawisz.";
         getchar();getchar();
@@ -508,7 +566,7 @@ void editContact (vector<Contact> &contactList) {
         inputFile.open("Adresaci.txt",ios::out);
 
         if (inputFile.good()==true) {
-            for (auto it: contactList) {
+            for (auto it: loggedInUserContactList) {
                 inputFile << it.contactId << "|" << it.userId << "|" << it.firstName << "|" << it.lastName << "|" << it.phoneNumber << "|" << it.email << "|" << it.adress << "|" << endl;
             }
         }
@@ -533,8 +591,8 @@ int main() {
             userId=logging(users,usersAmount);
 
             if(userId!=0){
-            vector <Contact> contactList;
-            int contactsAmount=getDataFromAddressBookFile(contactList, userId);
+            vector <Contact> loggedInUserContactList;
+            int contactsAmount=getDataFromAddressBookFileForLoggedInUser(loggedInUserContactList, userId);
 
                 char chooseAddressBookMenu;
                 bool flag=true;
@@ -543,22 +601,22 @@ int main() {
                     cin >> chooseAddressBookMenu;
                     switch(chooseAddressBookMenu) {
                     case '1':
-                        contactsAmount=addNewContact(contactList, contactsAmount, userId);
+                        contactsAmount=addNewContact(loggedInUserContactList, contactsAmount, userId);
                         break;
                     case '2':
-                        searchByFirstName(contactList);
+                        searchByFirstName(loggedInUserContactList);
                         break;
                     case '3':
-                        searchByLastName(contactList);
+                        searchByLastName(loggedInUserContactList);
                         break;
                     case '4':
-                        showContacts(contactList);
+                        showContacts(loggedInUserContactList);
                         break;
                     case '5':
-                        contactsAmount=removeContact(contactList, contactsAmount);
+                        contactsAmount=removeContact(loggedInUserContactList, contactsAmount);
                         break;
                     case '6':
-                        editContact(contactList);
+                        editContact(loggedInUserContactList);
                         break;
                     case '7':
                         changeUserPassword(users, userId);
