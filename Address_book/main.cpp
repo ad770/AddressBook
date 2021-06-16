@@ -326,6 +326,15 @@ int addNewContact(vector<Contact> &loggedInUserContactList, int wholeContactsAmo
     system("cls");
 
     int nextId=wholeContactsAmount+1;
+
+
+    //dodawanie 1 nie dzia³a w przypadku usuniecia elementu ze srodka listy
+//    if (contactsAmount==0) {
+//        nextId=1;
+//    } else {
+//        nextId=contactList[contactsAmount-1].id+1;
+//    }
+
     string firstName, lastName, phoneNumber, email, adress;
     Contact person;
 
@@ -496,6 +505,7 @@ int removeContact (vector<Contact> &loggedInUserContactList, int contactsAmount)
 }
 
 void editContact (vector<Contact> &loggedInUserContactList) {
+    vector <Contact> wholeContactList;
     int id;
     string newFirstName, newLastName, newPhoneNumber, newEmail, newAdress;
     Contact person;
@@ -562,15 +572,29 @@ void editContact (vector<Contact> &loggedInUserContactList) {
         default:
             break;
         }
-        fstream inputFile;
-        inputFile.open("Adresaci.txt",ios::out);
 
-        if (inputFile.good()==true) {
-            for (auto it: loggedInUserContactList) {
-                inputFile << it.contactId << "|" << it.userId << "|" << it.firstName << "|" << it.lastName << "|" << it.phoneNumber << "|" << it.email << "|" << it.adress << "|" << endl;
-            }
+        fstream inputFile;
+        inputFile.open("Adresaci.txt",ios::in);
+        if(inputFile.good()==true) {
+            getWholeDataFromAddressBookFile(wholeContactList);
         }
         inputFile.close();
+
+        ofstream outputFile;
+        outputFile.open("Adresaci_temp.txt",ios::out);
+
+        if (outputFile.good()==true) {
+            for (auto it: wholeContactList) {
+                if (it.contactId!=id) {
+                    outputFile << it.contactId << "|" << it.userId << "|" << it.firstName << "|" << it.lastName << "|" << it.phoneNumber << "|" << it.email << "|" << it.adress << "|" << endl;
+                } else {
+                    outputFile << iter->contactId << "|" << iter->userId << "|" << iter->firstName << "|" << iter->lastName << "|" << iter->phoneNumber << "|" << iter->email << "|" << iter->adress << "|" << endl;
+                }
+            }
+        }
+
+        outputFile.close();
+        fixFiles();
         cout << "Kontakt zostal pomyslnie zaktualizowany" << endl;
         Sleep(1000);
         return;
