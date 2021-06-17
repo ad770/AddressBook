@@ -324,16 +324,9 @@ int addNewContact(vector<Contact> &loggedInUserContactList, int wholeContactsAmo
     system("cls");
     getAddressBookFileInfo();
     system("cls");
-
-    int nextId=wholeContactsAmount+1;
-
-
-    //dodawanie 1 nie dzia³a w przypadku usuniecia elementu ze srodka listy
-//    if (contactsAmount==0) {
-//        nextId=1;
-//    } else {
-//        nextId=contactList[contactsAmount-1].id+1;
-//    }
+    vector <Contact> wholeContactList;
+    getWholeDataFromAddressBookFile(wholeContactList);
+    int nextId=wholeContactList.back().contactId+1;
 
     string firstName, lastName, phoneNumber, email, adress;
     Contact person;
@@ -613,11 +606,9 @@ int main() {
         switch(chooseLoginMenu) {
         case '1':
             userId=logging(users,usersAmount);
-
             if(userId!=0){
             vector <Contact> loggedInUserContactList;
             int contactsAmount=getDataFromAddressBookFileForLoggedInUser(loggedInUserContactList, userId);
-
                 char chooseAddressBookMenu;
                 bool flag=true;
                 do {
@@ -664,6 +655,5 @@ int main() {
             break;
         }
     }
-
     return 0;
 }
