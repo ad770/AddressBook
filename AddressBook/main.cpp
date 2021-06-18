@@ -251,7 +251,6 @@ int registration (vector<User> &users, int usersAmount) {
     string login, password;
     User newUser;
 
-    do {
         cout << "Podaj nazwe uzytkownika: ";
         cin >> login;
 
@@ -286,10 +285,11 @@ int registration (vector<User> &users, int usersAmount) {
             inputFile.close();
             return usersAmount+1;
         } else {
-            cout << "Uzytkownik o takiej nazwie juz istnieje. Sprobuj jeszcze raz.\n";
+            cout << "Uzytkownik o takiej nazwie juz istnieje.\n\nNacisnij dowolny klawisz aby wrocic do glownego menu.\n";
+            getchar();
+            getchar();
             newUserId=0;
         }
-    } while (newUserId==0);
 }
 
 void changeUserPassword (vector<User> &users, int userId) {
