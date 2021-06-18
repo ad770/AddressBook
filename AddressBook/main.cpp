@@ -325,9 +325,13 @@ int addNewContact(vector<Contact> &loggedInUserContactList, int wholeContactsAmo
     getAddressBookFileInfo();
     system("cls");
     vector <Contact> wholeContactList;
+    int nextId;
     getWholeDataFromAddressBookFile(wholeContactList);
-    int nextId=wholeContactList.back().contactId+1;
-
+    if (wholeContactList.size()!=0) {
+        nextId=wholeContactList.back().contactId+1;
+    } else {
+        nextId=1;
+    }
     string firstName, lastName, phoneNumber, email, adress;
     Contact person;
 
