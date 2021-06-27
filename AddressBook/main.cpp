@@ -11,28 +11,67 @@ using namespace std;
 
 void mainMenuLogin() {
     system("cls");
-    cout << "KSIAZKA ADRESOWA"                  << endl;
-    cout << "1.Logowanie"                       << endl;
-    cout << "2.Rejestracja"                     << endl;
-    cout << "9.Zamknij program"                 << endl;
+    cout << "    ---===KSIAZKA ADRESOWA===---    "  << endl;
+    cout << "------------------------------------"  << endl;
+    cout << "--1. Logowanie"                        << endl;
+    cout << "--2. Rejestracja"                      << endl;
+    cout << "------------------------------------"  << endl;
+    cout << "--9. Zamknij program"                  << endl;
+    cout << "------------------------------------"  << endl;
 }
 
 void mainMenuAddressBook() {
     system("cls");
-    cout << "KSIAZKA ADRESOWA"                  << endl;
-    cout << "1.Dodaj adresata"                  << endl;
-    cout << "2.Wyszukaj po imieniu"             << endl;
-    cout << "3.Wyszukaj po nazwisku"            << endl;
-    cout << "4.Wyswietl wszystkich adresatow"   << endl;
-    cout << "5.Usun adresata"                   << endl;
-    cout << "6.Edytuj adresata"                 << endl;
-    cout << "7.Zmien haslo"                     << endl;
-    cout << "8.Wyloguj sie"                     << endl;
+    cout << "    ---===KSIAZKA ADRESOWA===---    "  << endl;
+    cout << "------------------------------------"  << endl;
+    cout << "--1.Dodaj adresata"                    << endl;
+    cout << "--2.Wyszukaj po imieniu"               << endl;
+    cout << "--3.Wyszukaj po nazwisku"              << endl;
+    cout << "--4.Wyswietl wszystkich adresatow"     << endl;
+    cout << "--5.Usun adresata"                     << endl;
+    cout << "--6.Edytuj adresata"                   << endl;
+    cout << "------------------------------------"  << endl;
+    cout << "--7.Zmien haslo"                       << endl;
+    cout << "--8.Wyloguj sie"                       << endl;
+    cout << "------------------------------------"  << endl;
 }
 
-struct User {
+class User {
     int userId;
     string login, password;
+    vector <User> users;
+
+public:
+    User(int userId=0, string login="", string password=""){
+        this->userId = userId;
+        this->login = login;
+        this->password = password;
+    };
+
+    int getUserId(){
+        return userId;
+    }
+    string getLogin(){
+        return login;
+    }
+    string getPassword(){
+        return password;
+    }
+    void setUserId(int newUserId){
+        userId = newUserId;
+    }
+    void setLogin(string newLogin){
+        login = newLogin;
+    }
+    void setPassword(string newPassword){
+        password = newPassword;
+    }
+
+    vector <User> getDataFromLoginFile();
+    void registration();
+    void saveNewUserToFile();
+    void changeUserPassword (int);
+    int logging();
 };
 
 struct Contact {
@@ -81,8 +120,8 @@ void getAddressBookFileInfo() {
     inputFile.close();
 }
 
-int getDataFromLoginFile(vector<User> &users) {
-    User usersFromFile;
+vector <User> User::getDataFromLoginFile() {
+    User getUsers;
     string line;
     int lineNumber=1;
     int usersAmount=0;
@@ -93,28 +132,28 @@ int getDataFromLoginFile(vector<User> &users) {
         while(getline(inputFile,line,'|')) {
             switch(lineNumber) {
             case 1:
-                usersFromFile.userId=(atoi(line.c_str()));
+                getUsers.userId=(atoi(line.c_str()));
                 break;
             case 2:
-                usersFromFile.login=(line);
+                getUsers.login=(line);
                 break;
             case 3:
-                usersFromFile.password=(line);
+                getUsers.password=(line);
                 break;
             }
             if (lineNumber==3) {
                 lineNumber=0;
                 usersAmount++;
-                users.push_back(usersFromFile);
+                users.push_back(getUsers);
             }
             lineNumber++;
         }
     }
     inputFile.close();
-    return usersAmount;
+    return users;
 }
 
-int getDataFromAddressBookFileForLoggedInUser(vector<Contact> &loggedInUserContactList, int userId) {
+void getDataFromAddressBookFileForLoggedInUser(vector<Contact> &loggedInUserContactList, int userId) {
     Contact person;
     string line;
     int lineNumber=1;
@@ -158,7 +197,6 @@ int getDataFromAddressBookFileForLoggedInUser(vector<Contact> &loggedInUserConta
         }
     }
     inputFile.close();
-    return contactsAmount;
 }
 
 void getWholeDataFromAddressBookFile(vector<Contact> &wholeContactList) {
@@ -210,7 +248,7 @@ void fixFiles () {
     rename("Adresaci_temp.txt","Adresaci.txt");
 }
 
-int logging (vector<User> &users, int usersAmount) {
+int User::logging () {
     int id=0;
     string login, password;
     cout << "Podaj nazwe: ";
@@ -218,7 +256,7 @@ int logging (vector<User> &users, int usersAmount) {
 
     auto iter=find_if(users.begin(), users.end(),
     [&](User const & users) {
-        return users.login==login;
+        return (users.login==login);
     });
 
     if (iter==users.end()) {
@@ -246,10 +284,30 @@ int logging (vector<User> &users, int usersAmount) {
     }
 }
 
-int registration (vector<User> &users, int usersAmount) {
-    int newUserId=usersAmount+1;
+void User::saveNewUserToFile() {
+    fstream outputFile;
+    outputFile.open("Uzytkownicy.txt",ios::out | ios::app);
+
+    if (outputFile.good()==true) {
+        outputFile << users[users.size()-1].userId << '|';
+        outputFile << users[users.size()-1].login << '|';
+        outputFile << users[users.size()-1].password << '|' << endl;
+
+        cout << "Poprawnie dodano nowy kontakt.";
+        Sleep(1000);
+    } else {
+        cout << "Wystapil problem z plikiem. Blad zapisu danych.";
+        getchar();
+        getchar();
+    }
+    outputFile.close();
+}
+
+void User::registration () {
+    User saveNewUser;
+
+    int newUserId=users.size()+1;
     string login, password;
-    User newUser;
 
         cout << "Podaj nazwe uzytkownika: ";
         cin >> login;
@@ -262,28 +320,11 @@ int registration (vector<User> &users, int usersAmount) {
             cout << "Podaj haslo: ";
             cin >> password;
 
-            newUser.login=login;
-            newUser.password=password;
-            newUser.userId=newUserId;
-            users.push_back(newUser);
-
-            fstream inputFile;
-            inputFile.open("Uzytkownicy.txt",ios::out | ios::app);
-
-            if (inputFile.good()==true) {
-                inputFile << users[usersAmount].userId << '|';
-                inputFile << users[usersAmount].login << '|';
-                inputFile << users[usersAmount].password << '|' << endl;
-
-                cout << "Poprawnie dodano nowy kontakt.";
-                Sleep(1000);
-            } else {
-                cout << "Wystapil problem z plikiem. Blad zapisu danych.";
-                getchar();
-                getchar();
-            }
-            inputFile.close();
-            return usersAmount+1;
+            saveNewUser.login=login;
+            saveNewUser.password=password;
+            saveNewUser.userId=newUserId;
+            users.push_back(saveNewUser);
+            User::saveNewUserToFile();
         } else {
             cout << "Uzytkownik o takiej nazwie juz istnieje.\n\nNacisnij dowolny klawisz aby wrocic do glownego menu.\n";
             getchar();
@@ -292,7 +333,7 @@ int registration (vector<User> &users, int usersAmount) {
         }
 }
 
-void changeUserPassword (vector<User> &users, int userId) {
+void User::changeUserPassword (int userId) {
     string oldPassword, newPassword;
 
     cout << "Podaj stare haslo: ";
@@ -320,42 +361,7 @@ void changeUserPassword (vector<User> &users, int userId) {
     }
 }
 
-int addNewContact(vector<Contact> &loggedInUserContactList, int wholeContactsAmount, int userId) {
-    system("cls");
-    getAddressBookFileInfo();
-    system("cls");
-    vector <Contact> wholeContactList;
-    int nextId;
-    getWholeDataFromAddressBookFile(wholeContactList);
-    if (wholeContactList.size()!=0) {
-        nextId=wholeContactList.back().contactId+1;
-    } else {
-        nextId=1;
-    }
-    string firstName, lastName, phoneNumber, email, adress;
-    Contact person;
-
-    cout << "Id nowego kontaktu = " << nextId << endl;
-    cout << "Podaj imie: ";
-    firstName = getStringLine();
-    cout << "Podaj nazwisko: ";
-    lastName = getStringLine();
-    cout << "Podaj numer telefonu: ";
-    phoneNumber = getStringLine();
-    cout << "Podaj adres email: ";
-    email = getStringLine();
-    cout << "Podaj adres zamieszkania: ";
-    adress = getStringLine();
-
-    person.contactId=(nextId);
-    person.userId=(userId);
-    person.firstName=(firstName);
-    person.lastName=(lastName);
-    person.phoneNumber=(phoneNumber);
-    person.email=(email);
-    person.adress=(adress);
-    loggedInUserContactList.push_back(person);
-
+void saveNewContactToFile (vector<Contact> &loggedInUserContactList) {
     fstream outputFile;
     outputFile.open("Adresaci.txt",ios::out | ios::app);
 
@@ -376,7 +382,46 @@ int addNewContact(vector<Contact> &loggedInUserContactList, int wholeContactsAmo
         getchar();
     }
     outputFile.close();
-    return wholeContactsAmount+1;
+}
+
+int addNewContact(vector<Contact> &loggedInUserContactList, int userId) {
+    system("cls");
+    getAddressBookFileInfo();
+    system("cls");
+    vector <Contact> wholeContactList;
+    int nextId;
+    getWholeDataFromAddressBookFile(wholeContactList);
+
+    if (wholeContactList.size()!=0) {
+        nextId=wholeContactList.back().contactId+1;
+    } else {
+        nextId=1;
+    }
+    string firstName, lastName, phoneNumber, email, adress;
+    Contact person;
+
+    cout << "Id nowego kontaktu = " << nextId << endl;
+    cout << "Podaj imie: ";
+    firstName = getStringLine();
+    cout << "Podaj nazwisko: ";
+    lastName = getStringLine();
+    cout << "Podaj numer telefonu: ";
+    phoneNumber = getStringLine();
+    cout << "Podaj adres email: ";
+    email = getStringLine();
+    cout << "Podaj adres zamieszkania: ";
+    adress = getStringLine();
+
+    person.contactId=(nextId);  // sprobowac zamiast nowej struktury person -> loggedInUserContactList.push_back(Contact(nextId, userId, firstName, lastName, phoneNumber, email, address));
+    person.userId=(userId);
+    person.firstName=(firstName);
+    person.lastName=(lastName);
+    person.phoneNumber=(phoneNumber);
+    person.email=(email);
+    person.adress=(adress);
+    loggedInUserContactList.push_back(person);
+
+    saveNewContactToFile(loggedInUserContactList);
 }
 
 void showContacts (vector<Contact> &loggedInUserContactList) {
@@ -447,7 +492,7 @@ void searchByLastName (vector<Contact> &loggedInUserContactList) {
     getchar();
 }
 
-int removeContact (vector<Contact> &loggedInUserContactList, int contactsAmount) {
+void removeContact (vector<Contact> &loggedInUserContactList) {
     vector <Contact> wholeContactList;
     int id;
     cout << "Podaj numer indeksu do usuniecia: ";
@@ -463,49 +508,46 @@ int removeContact (vector<Contact> &loggedInUserContactList, int contactsAmount)
         cout << "Aby kontynuowac, nacisnij dowolny klawisz.";
         getchar();
         getchar();
-        return contactsAmount;
-    }
+    } else {
+        cout << "Aby potwierdzic usuniecie kontaktu o indeksie = " << id << ", nacisnij t" << endl;
+        cin.sync();
+        if (getch()=='t') {
+            loggedInUserContactList.erase(
+                remove_if(loggedInUserContactList.begin(), loggedInUserContactList.end(),
+            [&](Contact const & loggedInUserContactList) {
+                return loggedInUserContactList.contactId == id;
+            }),
+            loggedInUserContactList.end());
+            cout << "Kontakt zostal pomyslnie usuniety" << endl;
+            Sleep(1000);
 
-    cout << "Aby potwierdzic usuniecie kontaktu o indeksie = " << id << ", nacisnij t" << endl;
-    cin.sync();
-    if (getch()=='t') {
-        loggedInUserContactList.erase(
-            remove_if(loggedInUserContactList.begin(), loggedInUserContactList.end(),
-        [&](Contact const & loggedInUserContactList) {
-            return loggedInUserContactList.contactId == id;
-        }),
-        loggedInUserContactList.end());
-        cout << "Kontakt zostal pomyslnie usuniety" << endl;
-        Sleep(1000);
+            fstream inputFile;
+            inputFile.open("Adresaci.txt",ios::in);
+            if(inputFile.good()==true) {
+                getWholeDataFromAddressBookFile(wholeContactList);
+            }
+            inputFile.close();
 
-        fstream inputFile;
-        inputFile.open("Adresaci.txt",ios::in);
-        if(inputFile.good()==true) {
-            getWholeDataFromAddressBookFile(wholeContactList);
-        }
-        inputFile.close();
+            ofstream outputFile;
+            outputFile.open("Adresaci_temp.txt",ios::out);
 
-        ofstream outputFile;
-        outputFile.open("Adresaci_temp.txt",ios::out);
-
-        if (outputFile.good()==true) {
-            for (auto it: wholeContactList) {
-                if (it.contactId!=id) {
-                    outputFile << it.contactId << "|" << it.userId << "|" << it.firstName << "|" << it.lastName << "|" << it.phoneNumber << "|" << it.email << "|" << it.adress << "|" << endl;
+            if (outputFile.good()==true) {
+                for (auto it: wholeContactList) {
+                    if (it.contactId!=id) {
+                        outputFile << it.contactId << "|" << it.userId << "|" << it.firstName << "|" << it.lastName << "|" << it.phoneNumber << "|" << it.email << "|" << it.adress << "|" << endl;
+                    }
                 }
             }
-        }
-        outputFile.close();
-        fixFiles();
-    } else system("pause");
-    return contactsAmount-1;
+            outputFile.close();
+            fixFiles();
+        } else system("pause");
+    }
 }
 
 void editContact (vector<Contact> &loggedInUserContactList) {
     vector <Contact> wholeContactList;
     int id;
     string newFirstName, newLastName, newPhoneNumber, newEmail, newAdress;
-    Contact person;
 
     cout << "Podaj numer indesku osoby, ktorej dane chcesz edytowac: ";
     cin >> id;
@@ -535,33 +577,28 @@ void editContact (vector<Contact> &loggedInUserContactList) {
         cin >> chooseMenu;
         switch(chooseMenu) {
         case '1':
-            cout << "Podaj imie: ";
+            cout << "Podaj nowe imie: ";
             newFirstName=getStringLine();
-            person.firstName=(newFirstName);
             iter->firstName=newFirstName;
             break;
         case '2':
-            cout << "Podaj nazwisko: ";
+            cout << "Podaj nowe nazwisko: ";
             newLastName=getStringLine();
-            person.lastName=(newLastName);
             iter->lastName=newLastName;
             break;
         case '3':
-            cout << "Podaj numer telefonu: ";
+            cout << "Podaj nowy numer telefonu: ";
             newPhoneNumber=getStringLine();
-            person.phoneNumber=(newPhoneNumber);
             iter->phoneNumber=newPhoneNumber;
             break;
         case '4':
-            cout << "Podaj adres email: ";
+            cout << "Podaj nowy adres email: ";
             newEmail=getStringLine();
-            person.email=(newEmail);
             iter->email=newEmail;
             break;
         case '5':
-            cout << "Podaj adres zamieszkania: ";
+            cout << "Podaj nowy adres zamieszkania: ";
             newAdress=getStringLine();
-            person.adress=(newAdress);
             iter->adress=newAdress;
             break;
         case '6':
@@ -591,6 +628,7 @@ void editContact (vector<Contact> &loggedInUserContactList) {
         }
 
         outputFile.close();
+
         fixFiles();
         cout << "Kontakt zostal pomyslnie zaktualizowany" << endl;
         Sleep(1000);
@@ -599,8 +637,8 @@ void editContact (vector<Contact> &loggedInUserContactList) {
 }
 
 int main() {
-    vector <User> users;
-    int usersAmount=getDataFromLoginFile(users);
+    User user;
+    user.getDataFromLoginFile();
     char chooseLoginMenu;
     int userId=0;
 
@@ -609,10 +647,10 @@ int main() {
         cin >> chooseLoginMenu;
         switch(chooseLoginMenu) {
         case '1':
-            userId=logging(users,usersAmount);
-            if(userId!=0){
-            vector <Contact> loggedInUserContactList;
-            int contactsAmount=getDataFromAddressBookFileForLoggedInUser(loggedInUserContactList, userId);
+            userId=user.logging();
+            if(userId!=0) {
+                vector <Contact> loggedInUserContactList;
+                getDataFromAddressBookFileForLoggedInUser(loggedInUserContactList, userId);
                 char chooseAddressBookMenu;
                 bool flag=true;
                 do {
@@ -620,7 +658,7 @@ int main() {
                     cin >> chooseAddressBookMenu;
                     switch(chooseAddressBookMenu) {
                     case '1':
-                        contactsAmount=addNewContact(loggedInUserContactList, contactsAmount, userId);
+                        addNewContact(loggedInUserContactList, userId);
                         break;
                     case '2':
                         searchByFirstName(loggedInUserContactList);
@@ -632,13 +670,13 @@ int main() {
                         showContacts(loggedInUserContactList);
                         break;
                     case '5':
-                        contactsAmount=removeContact(loggedInUserContactList, contactsAmount);
+                        removeContact(loggedInUserContactList);
                         break;
                     case '6':
                         editContact(loggedInUserContactList);
                         break;
                     case '7':
-                        changeUserPassword(users, userId);
+                        user.changeUserPassword(userId);
                         break;
                     case '8':
                         flag=false;
@@ -646,12 +684,12 @@ int main() {
                     default:
                         break;
                     }
-                }while(flag==true);
+                } while(flag==true);
                 break;
             } else
-            break;
+                break;
         case '2':
-            usersAmount=registration(users,usersAmount);
+            user.registration();
             break;
         case '9':
             return 0;
